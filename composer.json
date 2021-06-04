@@ -1,0 +1,10 @@
+{
+    "name": "adrian/ffi_test",
+    "authors": [
+        {
+            "name": "AdrK",
+            "email": "adrian.kurylak@gmail.com"
+        }
+    ],
+    "require": {}
+}
