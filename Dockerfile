@@ -1,10 +1,18 @@
-FROM fedora
-RUN dnf install -y make gcc php-devel php-ffi
-RUN dnf install -y git
-RUN git clone --branch direct_from_mem --recursive https://github.com/AdrK/phpspy.git
-RUN cd phpspy/vendor/termbox/ && make install
-RUN ln -s /usr/local/lib/libtermbox.so /usr/lib64/libtermbox.so.1
-RUN cd phpspy/ && USE_ZEND=1 make phpspy_dynamic -j4
-RUN cp phpspy/libphpspy.so /usr/lib64/
-COPY test.php ./test.php
-CMD ["php", "./test.php"]
+FROM ubuntu:latest
+
+ENV DEBIAN_FRONTEND=non-interactive
+
+RUN apt-get -y update
+RUN apt-get -y install gcc make vim php php-ffi wget
+
+ARG pyroscope_libs_sha
+ARG pyroscope_python_tag="v0.0.0"
+
+WORKDIR app/
+RUN wget -qnc https://dl.pyroscope.io/static-libs/$pyroscope_libs_sha/linux-amd64/libpyroscope.phpspy.a -O libpyroscope.phpspy.a
+RUN wget -qnc https://dl.pyroscope.io/static-libs/$pyroscope_libs_sha/linux-amd64/libpyroscope.phpspy.h -O libpyroscope.phpspy.h
+RUN wget -qnc https://dl.pyroscope.io/static-libs/$pyroscope_libs_sha/linux-amd64/libphpspy.a -O libphpspy.a
+COPY test.php composer.json ./app/
+
+RUN gcc -shared -Wl,--whole-archive libpyroscope.phpspy.a libphpspy.a -Wl,--no-whole-archive -o libpyroscope.phpspy.so
+

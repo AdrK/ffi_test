@@ -1,15 +1,26 @@
 <?php
 $ffi = FFI::cdef(
-	"int phpspy_init(int pid_i, void *err_ptr, int err_len);
-	int phpspy_cleanup(int pid_i, void *err_ptr, int err_len);
-	int phpspy_snapshot(int pid_i, void *ptr, int len, void *err_ptr, int err_len);",
-    "libphpspy.so");
+	"
+	typedef long long GoInt;
+	GoInt Start(char* applicationName, int cpid, char* spyName, char* serverAddress, char* authToken, int sampleRate, int withSubprocesses, char* logLevel);
+	GoInt Stop(int Pid);
+	GoInt ChangeName(char* newName, int Pid);
+	GoInt RegisterLogger(void* callback);
+	GoInt TestLogger();
+	",
+    "libpyroscope.phpspy.so");
 
-$err_buf = FFI::new("char[1024]");
-$data_buf = FFI::new("char[1024]");
-$ffi->phpspy_init(getmypid(), $err_buf, 1024);
-$ffi->phpspy_snapshot(getmypid(), $data_buf, 1024, $err_buf, 1024);
-$ffi->phpspy_cleanup(getmypid(), $err_buf, 1024);
-var_dump(FFI::string($data_buf));
-var_dump(FFI::string($err_buf));
+$pid = getmypid();
+$ret = $ffi->Start("test_app", $pid, "phpspy", "http://192.168.0.45:4040", "", 100, 0, "Debug");
+
+echo "My pid is: $pid\n";
+echo "Start ret is: $ret\n";
+
+$x = 1;
+while(true) {
+  echo "The number is: $x\n";
+  $x++;
+  sleep(1);
+}
+
 ?>
